@@ -1,6 +1,6 @@
 /* Prof.: Sergio Augusto C. Bezerra
 
-   Programa MODULADO "LS_INS02_dev.CPP" para exemplificar uma lista simplesmente encadeada
+   Editando para duplamente encadeado com dados persistente (Arquivos).   
 */
 
 #include <stdio.h>
@@ -131,27 +131,43 @@ void exibir() {
     }
 }
 
+void carregar() {
+    FILE *f = fopen("Alunos.txt", "r");
+    if (!f) { cout << "Erro ao carregar!"; return; }
+    
+    pAux = &inicio;
+    pAux->pProximo = new Aluno;
+    pAux->pProximo->pAnterior = pAux;
+    pAux = pAux->pProximo;
+
+    while (fscanf(f, "%d|%48[^|]|%f|%f|%f\n", &pAux->matricula, pAux->nome, &pAux->notas[0], &pAux->notas[1], &pAux->notas[2]) == 5) {
+        pAux->pProximo = new Aluno;
+        pAux->pProximo->pAnterior = pAux;
+        pAux = pAux->pProximo;
+        pAux->pProximo = NULL;
+    }
+
+    pAux->pAnterior->pProximo = NULL;
+    delete pAux;
+}
+
 /********************* FUNCAO INSERIR *******************/
 
 void inserir() {
-    Aluno *novo = new Aluno;
+    do {
+        Aluno *novo = new Aluno();
+        novo->pProximo = NULL;
 
-    pAux = &inicio; /* aponta para o inicio da lista */
-    novo->pProximo = NULL;
+        pAux = &inicio; /* aponta para o inicio da lista */
 
-    if (pAux->pProximo == NULL) { // se lista vazia
-        pAux->pProximo = novo;
-        pAux->pProximo->pAnterior = pAux;
-    } else {
         while (pAux->pProximo) {
             pAux = pAux->pProximo;
         }
         pAux->pProximo = novo;
         novo->pAnterior = pAux;
-    }
-    pAux = novo;
 
-    do {
+        pAux = novo;
+
         system("cls");
         cout << "************************* CADASTRO DE ALUNO *************************";
         //pAux->pProximo = new Aluno;
@@ -184,7 +200,7 @@ void inserir() {
 /********************* FUNCAO REMOVER *******************/
 
 
-/*
+
 void remover() {
     do {
         resp = '0';
@@ -197,9 +213,9 @@ void remover() {
         gotoXY(15, 2);
         cin >> matTemp;
         pAux = &inicio;
-        while (pAux->matricula != matTemp && pAux->pProx != NULL) {
-            pAnt = pAux;
-            pAux = pAux->pProx;
+        while (pAux->matricula != matTemp && pAux->pProximo != NULL) {
+            //pAux->pAnterior = pAux;
+            pAux = pAux->pProximo;
         }
         if (pAux->matricula == matTemp) {
             gotoXY(3, 5);
@@ -207,16 +223,20 @@ void remover() {
             cin >> resp;
             resp = toupper(resp);
             if (resp == 'S') {
-                pAnt->pProx = pAux->pProx;
-                pAux->pProx = NULL;
-                pAnt = NULL;
+                pAux->pAnterior->pProximo = pAux->pProximo;
+
+                if (pAux->pProximo != NULL)
+                    pAux->pProximo->pAnterior = pAux->pAnterior;
+
+                pAux->pProximo = NULL;
+                pAux->pAnterior = NULL;
                 delete pAux;
             }
         } else {
             gotoXY(20, 2);
             cout << "Matricula inexistente";
             system("pause");
-            pAnt = NULL;
+            pAux->pAnterior = NULL;
             pAux = NULL;
         }
         gotoXY(3, 6);
@@ -224,7 +244,7 @@ void remover() {
         cin >> resp;
         resp = toupper(resp);
     } while (resp == 'S');
-}*/
+}
 
 /********************* FUNCAO INSERIR EM ORDEM *******************/
 void inserirOrdem() {
@@ -292,6 +312,7 @@ int main() {
     int cont_tela = 1;
 
     inicio.pProximo = NULL; /* lista vazia */
+    carregar();
 
     cabecalho();
     diario();
@@ -313,8 +334,8 @@ int main() {
                 inserir();
                 break;
             case 3:
-                /* remover();
-                break; */
+                remover();
+                break;
             case 4:
                 inserirOrdem();
                 break;
