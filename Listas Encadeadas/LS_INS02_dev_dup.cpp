@@ -1,6 +1,6 @@
 /* Prof.: Sergio Augusto C. Bezerra
 
-   Editando para duplamente encadeado com dados persistente (Arquivos).   
+   Editando para duplamente encadeado com dados persistente (Arquivos).
 */
 
 #include <stdio.h>
@@ -15,6 +15,7 @@ using namespace std;
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
 void gotoXY(int x, int y);
+
 /****************** VARIAVEIS GLOBAIS ******************/
 
 char professor[50], disciplina[50], turma[10];
@@ -23,10 +24,10 @@ char resp;
 int linha, col, matTemp;
 
 struct Aluno {
-    int matricula;   /* numeros de 1 a no maximo 40 */
+    int matricula;   /* Numeros de 1 a no maximo 40 */
     char nome[50];
-    float notas[3];  /* valores das notas */
-    struct Aluno *pProximo; /* ponteiro para o proximo aluno */
+    float notas[3];  /* Valores das notas */
+    struct Aluno *pProximo; /* Ponteiro para o proximo aluno */
     struct Aluno *pAnterior;
 };
 
@@ -65,6 +66,7 @@ void menu() {
 }
 
 /******************** FUNCAO DIARIO *******************/
+
 void diario() {
     gotoXY(3, 9);
     cout << "PREENCHER OS DADOS DO CABECALHO DO DIARIO";
@@ -77,11 +79,10 @@ void diario() {
     gotoXY(3, 15);
     cout << "Turma: ";
     fgets(turma, 99, stdin);
-
 }
 
-
 /********************* FUNCAO EXIBIR *******************/
+
 void exibir() {
     if (inicio.pProximo != NULL) {
         pAux = inicio.pProximo; /* aponta para o inicio da lista */
@@ -131,10 +132,33 @@ void exibir() {
     }
 }
 
+void desenhar_cadastrar_aluno() {
+    system("cls");
+    cout << "************************* CADASTRO DE ALUNO *************************";
+    gotoXY(1, 2);
+    cout << "*  Matricula:                                                       *";
+    gotoXY(1, 3);
+    printf("*  Nome do Aluno:                                                   *");
+    gotoXY(1, 4);
+    cout << "*  Nota1:                                                           *";
+    gotoXY(1, 5);
+    cout << "*  Nota2:                                                           *";
+    cout << "\n*********************************************************************";
+}
+
+void desenhar_remover_aluno() {
+    system("cls");
+    cout << "************************** REMOVER ALUNO ****************************";
+    gotoXY(1, 2);
+    cout << "*  Matricula:                                                       *";
+    gotoXY(1, 3);
+    cout << "*********************************************************************";
+}
+
 void carregar() {
     FILE *f = fopen("Alunos.txt", "r");
     if (!f) { cout << "Erro ao carregar!"; return; }
-    
+
     pAux = &inicio;
     pAux->pProximo = new Aluno;
     pAux->pProximo->pAnterior = pAux;
@@ -149,43 +173,43 @@ void carregar() {
 
     pAux->pAnterior->pProximo = NULL;
     delete pAux;
+    fclose(f);
+}
+
+void salvar() {
+    FILE *f = fopen("Alunos.txt", "w");
+    if (!f) { cout << "Erro ao salvar"; return; }
+
+    pAux = &inicio;
+    pAux = pAux->pProximo;
+
+    while (pAux && fprintf(f, "%d|%s|%.2f|%.2f|%.2f\n", pAux->matricula, pAux->nome, pAux->notas[0], pAux->notas[1], pAux->notas[2]) != EOF) {
+        pAux = pAux->pProximo;
+    }
+
+    fclose(f);
 }
 
 /********************* FUNCAO INSERIR *******************/
 
 void inserir() {
     do {
+        desenhar_cadastrar_aluno();
         Aluno *novo = new Aluno();
         novo->pProximo = NULL;
 
         pAux = &inicio; /* aponta para o inicio da lista */
 
-        while (pAux->pProximo) {
-            pAux = pAux->pProximo;
-        }
+        while (pAux->pProximo) { pAux = pAux->pProximo; }
         pAux->pProximo = novo;
         novo->pAnterior = pAux;
-
         pAux = novo;
 
-        system("cls");
-        cout << "************************* CADASTRO DE ALUNO *************************";
-        //pAux->pProximo = new Aluno;
-        //pAux = pAux->pProximo;
-        gotoXY(1, 2);
-        cout << "*  Matricula:                                                       *";
-        gotoXY(1, 3);
-        printf("*  Nome do Aluno:                                                   *");
-        gotoXY(1, 4);
-        cout << "*  Nota1:                                                           *";
-        gotoXY(1, 5);
-        cout << "*  Nota2:                                                           *";
-        cout << "\n*********************************************************************";
         gotoXY(20, 2);
         cin >> pAux->matricula; getchar();
         gotoXY(20, 3);
-        fflush(stdin);
-        fgets(pAux->nome, 99, stdin);
+        //fgets(pAux->nome, 99, stdin);
+        cin.getline(pAux->nome, 50);
         gotoXY(20, 4);
         cin >> pAux->notas[0];
         gotoXY(20, 5);
@@ -196,20 +220,17 @@ void inserir() {
         cin >> resp;
         resp = toupper(resp);
     } while (resp == 'S');
+
+    salvar();
 }
+
 /********************* FUNCAO REMOVER *******************/
-
-
 
 void remover() {
     do {
+        desenhar_remover_aluno();
         resp = '0';
-        system("cls");
-        cout << "************************** REMOVER ALUNO ****************************";
-        gotoXY(1, 2);
-        cout << "*  Matricula:                                                       *";
-        gotoXY(1, 3);
-        cout << "*********************************************************************";
+
         gotoXY(15, 2);
         cin >> matTemp;
         pAux = &inicio;
@@ -234,10 +255,10 @@ void remover() {
             }
         } else {
             gotoXY(20, 2);
-            cout << "Matricula inexistente";
+            cout << "Matricula inexistente ";
             system("pause");
-            pAux->pAnterior = NULL;
-            pAux = NULL;
+            //pAux->pAnterior = NULL;
+            //pAux = NULL;
         }
         gotoXY(3, 6);
         cout << "Continuar removendo dados? Sim[S] Nao[outra tecla]---->";
@@ -247,28 +268,19 @@ void remover() {
 }
 
 /********************* FUNCAO INSERIR EM ORDEM *******************/
+
 void inserirOrdem() {
     Aluno *pMenor, *pMaior;
 
     do {
+        desenhar_cadastrar_aluno();
         pMaior = &inicio; /* aponta para o inicio da lista */
         pMenor = pMaior;
-        system("cls");
-        cout << "************************* CADASTRO DE ALUNO *************************";
         pAux = new Aluno;
-        gotoXY(1, 2);
-        cout << "*  Matricula:                                                       *";
-        gotoXY(1, 3);
-        printf("*  Nome do Aluno:                                                   *");
-        gotoXY(1, 4);
-        cout << "*  Nota1:                                                           *";
-        gotoXY(1, 5);
-        cout << "*  Nota2:                                                           *";
-        cout << "\n*********************************************************************";
+
         gotoXY(20, 2);
         cin >> pAux->matricula; getchar();
         gotoXY(20, 3);
-        fflush(stdin);
         fgets(pAux->nome, 99, stdin);
         gotoXY(20, 4);
         cin >> pAux->notas[0];
@@ -276,6 +288,8 @@ void inserirOrdem() {
         cin >> pAux->notas[1];
         pAux->notas[2] = (pAux->notas[0] + pAux->notas[1]) / 2;
         pAux->pProximo = NULL;
+
+
         if (pMaior->pProximo == NULL) {
             pMaior->pProximo = pAux;
             pAux->pProximo = NULL;
@@ -285,12 +299,16 @@ void inserirOrdem() {
                 pMenor = pMaior;
                 pMaior = pMaior->pProximo;
             }
+
             if (pAux->matricula > pMaior->matricula && pMaior->pProximo == NULL) {
                 pMaior->pProximo = pAux;
+                pAux->pAnterior = pMaior;
                 pAux->pProximo = NULL;
             } else {
                 pMenor->pProximo = pAux;
                 pAux->pProximo = pMaior;
+                pAux->pAnterior = pMenor;
+                pMaior->pAnterior = pAux;
             }
         }
         cout << "\nContinuar inserindo dados? Sim[S] Nao[outra tecla]---->";
@@ -305,10 +323,9 @@ void gotoXY(int x, int y) {
     SetConsoleCursorPosition(console, CursorPosition); // Sets position for next thing to be printed
 }
 
-
 /****************** FUNCAO PRINCIPAL ******************/
-int main() {
 
+int main() {
     int cont_tela = 1;
 
     inicio.pProximo = NULL; /* lista vazia */
@@ -319,7 +336,6 @@ int main() {
     cont_tela++;
 
     do {
-
         if (cont_tela > 1) {
             cabecalho();
             menu();
