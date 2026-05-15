@@ -34,15 +34,17 @@ struct Aluno {
 Aluno inicio, *pAux;
 
 /****************** FUNCAO CABECALHO ******************/
+
 void cabecalho() {
     system("cls");
     gotoXY(3, 5);
     cout << "PROGRAMA PARA GERENCIAR A MATRICULA, O NOME E AS NOTAS";
     gotoXY(3, 7);
-    cout << "DE UM ALUNO USANDO UMA LISTA SIMPLESMENTE ENCADEADA\n";
+    cout << "DE UM ALUNO USANDO UMA LISTA DUPLAMENTE ENCADEADA\n";
 }
 
 /****************** FUNCAO MENU ******************/
+
 void menu() {
     col = 15;
     gotoXY(col, 10);
@@ -193,17 +195,14 @@ void salvar() {
 /********************* FUNCAO INSERIR *******************/
 
 void inserir() {
+    pAux = &inicio; /* aponta para o inicio da lista */
+    while (pAux->pProximo) { pAux = pAux->pProximo; }
     do {
         desenhar_cadastrar_aluno();
-        Aluno *novo = new Aluno();
-        novo->pProximo = NULL;
 
-        pAux = &inicio; /* aponta para o inicio da lista */
-
-        while (pAux->pProximo) { pAux = pAux->pProximo; }
-        pAux->pProximo = novo;
-        novo->pAnterior = pAux;
-        pAux = novo;
+        pAux->pProximo = new Aluno;
+        pAux->pProximo->pAnterior = pAux;
+        pAux = pAux->pProximo;
 
         gotoXY(20, 2);
         cin >> pAux->matricula; getchar();
@@ -315,6 +314,7 @@ void inserirOrdem() {
         cin >> resp;
         resp = toupper(resp);
     } while (resp == 'S');
+    salvar();
 }
 
 void gotoXY(int x, int y) {
