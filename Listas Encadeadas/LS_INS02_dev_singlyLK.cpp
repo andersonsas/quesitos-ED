@@ -1,13 +1,10 @@
-/* Prof.: Sergio Augusto C. Bezerra
-
-   Programa MODULADO "LS_INS02_dev.CPP" para exemplificar uma lista simplesmente encadeada
+/*
+   Editando o simplesmente encadeado para dados persistentes.
 */
 
-#include <stdio.h>
-#include <new>    //<alloc.h>
-#include <ctype.h>
+#include <cstdio>
 #include <iostream>
-#include <stdlib.h>
+#include <ctype.h>
 #include <windows.h>
 
 using namespace std;
@@ -161,18 +158,31 @@ void carregar() {
     FILE *f = fopen("Singly_Alunos.txt", "r");
     if (!f) { cout << "Erro ao carregar!"; return; }
 
-    pAnt = pAux = &inicio;
-    pAux->pProximo = new Aluno;
-    pAux = pAux->pProximo;
+    inicio.pProximo = NULL;
+    pAux = &inicio;
 
-    while (fscanf(f, "%d|%48[^|]|%f|%f|%f\n", &pAux->matricula, pAux->nome, &pAux->notas[0], &pAux->notas[1], &pAux->notas[2]) == 5) {
-        pAnt = pAux;
-        pAux->pProximo = new Aluno;
-        pAux = pAux->pProximo;
+    while (true) {
+        Aluno *novo = new Aluno;
+
+        int lidos = fscanf(
+            f,
+            "%d|%49[^|]|%f|%f|%f\n",
+            &novo->matricula,
+            novo->nome,
+            &novo->notas[0],
+            &novo->notas[1],
+            &novo->notas[2]
+        );
+
+        if (lidos != 5) {
+            delete novo; break;
+        }
+
+        novo->pProximo = NULL;
+        pAux->pProximo = novo;
+        pAux = novo;
     }
 
-    pAnt->pProximo = NULL;
-    delete pAux;
     fclose(f);
 }
 
@@ -183,7 +193,15 @@ void salvar() {
     pAux = &inicio;
     pAux = pAux->pProximo;
 
-    while (pAux && fprintf(f, "%d|%s|%.2f|%.2f|%.2f\n", pAux->matricula, pAux->nome, pAux->notas[0], pAux->notas[1], pAux->notas[2]) != EOF) {
+    while (pAux && fprintf(
+        f,
+        "%d|%s|%.2f|%.2f|%.2f\n",
+        pAux->matricula,
+        pAux->nome,
+        pAux->notas[0],
+        pAux->notas[1],
+        pAux->notas[2]) != EOF
+    ) {
         pAux = pAux->pProximo;
     }
 
@@ -201,19 +219,17 @@ void inserir() {
         pAux->pProximo = new Aluno;
         pAux = pAux->pProximo;
 
-        gotoXY(20, 2);
-        cin >> pAux->matricula; getchar();
-        gotoXY(20, 3);
-        //fgets(pAux->nome, 99, stdin);
-        cin.getline(pAux->nome, 50);
-        gotoXY(20, 4);
-        cin >> pAux->notas[0];
-        gotoXY(20, 5);
-        cin >> pAux->notas[1];
+        gotoXY(20, 2); cin >> pAux->matricula; getchar();
+        gotoXY(20, 3); cin.getline(pAux->nome, 50); //fgets(pAux->nome, 99, stdin);
+        gotoXY(20, 4); cin >> pAux->notas[0];
+        gotoXY(20, 5); cin >> pAux->notas[1];
+
         pAux->notas[2] = (pAux->notas[0] + pAux->notas[1]) / 2;
         pAux->pProximo = NULL;
+
         cout << "\nContinuar inserindo dados? Sim[S] Nao[outra tecla]---->";
         cin >> resp;
+
         resp = toupper(resp);
     } while (resp == 'S');
     salvar();
@@ -226,18 +242,20 @@ void remover() {
         desenhar_remover_aluno();
         resp = '0';
 
-        gotoXY(15, 2);
-        cin >> matTemp;
         pAux = &inicio;
+        gotoXY(15, 2); cin >> matTemp;
+
         while (pAux->matricula != matTemp && pAux->pProximo != NULL) {
             pAnt = pAux;
             pAux = pAux->pProximo;
         }
+
         if (pAux->matricula == matTemp) {
             gotoXY(3, 5);
             cout << "ATENCAO: Remover " << pAux->nome << "? Sim[S] Nao[outra tecla]---->";
             cin >> resp;
             resp = toupper(resp);
+
             if (resp == 'S') {
                 pAnt->pProximo = pAux->pProximo;
                 pAux->pProximo = NULL;
@@ -245,12 +263,11 @@ void remover() {
                 delete pAux;
             }
         } else {
-            gotoXY(20, 2);
-            cout << "Matricula inexistente";
+            gotoXY(20, 2); cout << "Matricula inexistente";
             system("pause");
-            pAnt = NULL;
-            pAux = NULL;
+            pAnt = NULL; pAux = NULL;
         }
+
         gotoXY(3, 6);
         cout << "Continuar removendo dados? Sim[S] Nao[outra tecla]---->";
         cin >> resp;

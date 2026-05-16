@@ -1,10 +1,8 @@
-/* Prof.: Sergio Augusto C. Bezerra
-
+/*
    Editando para duplamente encadeado com dados persistente (Arquivos).
 */
 
 #include <stdio.h>
-#include <new>    //<alloc.h>
 #include <ctype.h>
 #include <iostream>
 #include <stdlib.h>
@@ -161,20 +159,32 @@ void carregar() {
     FILE *f = fopen("Alunos.txt", "r");
     if (!f) { cout << "Erro ao carregar!"; return; }
 
+    inicio.pProximo = NULL;
     pAux = &inicio;
-    pAux->pProximo = new Aluno;
-    pAux->pProximo->pAnterior = pAux;
-    pAux = pAux->pProximo;
 
-    while (fscanf(f, "%d|%48[^|]|%f|%f|%f\n", &pAux->matricula, pAux->nome, &pAux->notas[0], &pAux->notas[1], &pAux->notas[2]) == 5) {
-        pAux->pProximo = new Aluno;
-        pAux->pProximo->pAnterior = pAux;
-        pAux = pAux->pProximo;
-        pAux->pProximo = NULL;
+    while (true) {
+        Aluno *novo = new Aluno;
+
+        int lidos = fscanf(
+            f,
+            "%d|%49[^|]|%f|%f|%f\n",
+            &novo->matricula,
+            novo->nome,
+            &novo->notas[0],
+            &novo->notas[1],
+            &novo->notas[2]
+        );
+
+        if (lidos != 5) {
+            delete novo; break;
+        }
+
+        novo->pProximo = NULL;
+        novo->pAnterior = pAux;
+        pAux->pProximo = novo;
+        pAux = novo;
     }
 
-    pAux->pAnterior->pProximo = NULL;
-    delete pAux;
     fclose(f);
 }
 
@@ -185,7 +195,14 @@ void salvar() {
     pAux = &inicio;
     pAux = pAux->pProximo;
 
-    while (pAux && fprintf(f, "%d|%s|%.2f|%.2f|%.2f\n", pAux->matricula, pAux->nome, pAux->notas[0], pAux->notas[1], pAux->notas[2]) != EOF) {
+    while (pAux && fprintf(
+        f,
+        "%d|%s|%.2f|%.2f|%.2f\n",
+        pAux->matricula, pAux->nome,
+        pAux->notas[0],
+        pAux->notas[1],
+        pAux->notas[2]) != EOF
+    ) {
         pAux = pAux->pProximo;
     }
 
@@ -204,22 +221,16 @@ void inserir() {
         pAux->pProximo->pAnterior = pAux;
         pAux = pAux->pProximo;
 
-        gotoXY(20, 2);
-        cin >> pAux->matricula; getchar();
-        gotoXY(20, 3);
-        //fgets(pAux->nome, 99, stdin);
-        cin.getline(pAux->nome, 50);
-        gotoXY(20, 4);
-        cin >> pAux->notas[0];
-        gotoXY(20, 5);
-        cin >> pAux->notas[1];
+        gotoXY(20, 2); cin >> pAux->matricula; getchar();
+        gotoXY(20, 3); cin.getline(pAux->nome, 50); //fgets(pAux->nome, 99, stdin);
+        gotoXY(20, 4); cin >> pAux->notas[0];
+        gotoXY(20, 5); cin >> pAux->notas[1];
         pAux->notas[2] = (pAux->notas[0] + pAux->notas[1]) / 2;
 
         cout << "\nContinuar inserindo dados? Sim[S] Nao[outra tecla]---->";
         cin >> resp;
         resp = toupper(resp);
     } while (resp == 'S');
-
     salvar();
 }
 
@@ -253,8 +264,7 @@ void remover() {
                 delete pAux;
             }
         } else {
-            gotoXY(20, 2);
-            cout << "Matricula inexistente ";
+            gotoXY(20, 2); cout << "Matricula inexistente ";
             system("pause");
             //pAux->pAnterior = NULL;
             //pAux = NULL;
@@ -264,6 +274,7 @@ void remover() {
         cin >> resp;
         resp = toupper(resp);
     } while (resp == 'S');
+    salvar();
 }
 
 /********************* FUNCAO INSERIR EM ORDEM *******************/
@@ -277,17 +288,12 @@ void inserirOrdem() {
         pMenor = pMaior;
         pAux = new Aluno;
 
-        gotoXY(20, 2);
-        cin >> pAux->matricula; getchar();
-        gotoXY(20, 3);
-        fgets(pAux->nome, 99, stdin);
-        gotoXY(20, 4);
-        cin >> pAux->notas[0];
-        gotoXY(20, 5);
-        cin >> pAux->notas[1];
+        gotoXY(20, 2); cin >> pAux->matricula; getchar();
+        gotoXY(20, 3); fgets(pAux->nome, 99, stdin);
+        gotoXY(20, 4); cin >> pAux->notas[0];
+        gotoXY(20, 5); cin >> pAux->notas[1];
         pAux->notas[2] = (pAux->notas[0] + pAux->notas[1]) / 2;
         pAux->pProximo = NULL;
-
 
         if (pMaior->pProximo == NULL) {
             pMaior->pProximo = pAux;
