@@ -1,44 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>
 
-// Biblioteca para a função de atraso (sleep) compatível com Windows e Linux/Mac
-#ifdef _WIN32
-    #include <windows.h>
-    #define DELAY(ms) Sleep(ms)
-#else
-    #include <unistd.h>
-    #define DELAY(ms) usleep((ms) * 1000)
-#endif
+#define DELAY(ms) Sleep(ms)
 
 // Estrutura que representa um pacote (Nó da Fila)
 typedef struct Node {
     int id_pacote;
     int tamanho_bytes;
-    struct Node* prox;
+    struct Node *prox;
 } Node;
 
 // Estrutura da Fila
 typedef struct Queue {
-    Node* inicio;
-    Node* fim;
+    Node *inicio;
+    Node *fim;
     int total_pacotes;
 } Queue;
 
 // Função para inicializar a fila
-void inicializarFila(Queue* q) {
+void inicializarFila(Queue *q) {
     q->inicio = NULL;
     q->fim = NULL;
     q->total_pacotes = 0;
 }
 
 // Função para verificar se a fila está vazia
-int filaVazia(Queue* q) {
+int filaVazia(Queue *q) {
     return (q->inicio == NULL);
 }
 
 // Função para enfileirar (inserir) um pacote
-void enfileirar(Queue* q, int id, int tamanho) {
-    Node* novoPacote = (Node*)malloc(sizeof(Node));
+void enfileirar(Queue *q, int id, int tamanho) {
+    Node *novoPacote = (Node *)malloc(sizeof(Node));
     if (novoPacote == NULL) {
         printf("Erro de alocacao de memoria!\n");
         exit(1);
@@ -57,13 +51,13 @@ void enfileirar(Queue* q, int id, int tamanho) {
 }
 
 // Função para desenfileirar (remover) um pacote
-Node* desenfileirar(Queue* q) {
+Node *desenfileirar(Queue *q) {
     if (filaVazia(q)) {
         return NULL;
     }
-    Node* pacoteRemovido = q->inicio;
+    Node *pacoteRemovido = q->inicio;
     q->inicio = q->inicio->prox;
-    
+
     if (q->inicio == NULL) {
         q->fim = NULL;
     }
@@ -108,18 +102,18 @@ int main() {
     // 2. Fase de Transmissão (Desenfileiramento)
     int pacotes_enviados = 0;
     while (!filaVazia(&filaTransmissao)) {
-        Node* pacote = desenfileirar(&filaTransmissao);
-        
+        Node *pacote = desenfileirar(&filaTransmissao);
+
         // Simulação visual da transferência
         printf("[Origem] Preparando Pacote %d (%d bytes)...\n", pacote->id_pacote, pacote->tamanho_bytes);
         DELAY(800);
-        
+
         printf("   ---> [Canal] Transportando Pacote %d...\n", pacote->id_pacote);
         DELAY(1200); // Simula o tempo de rede
-        
+
         printf("      ---> [Destino] Pacote %d recebido com sucesso!\n\n", pacote->id_pacote);
         DELAY(500);
-        
+
         pacotes_enviados++;
         free(pacote); // Libera a memória do pacote que já chegou
     }
