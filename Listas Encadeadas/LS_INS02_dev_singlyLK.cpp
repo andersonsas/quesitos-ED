@@ -41,7 +41,7 @@ void cabecalho() {
 
 /****************** FUNCAO MENU ******************/
 
-void menu() {
+void interfaceMenu() {
     col = 15;
     gotoXY(col, 10);
     cout << "*************** Menu ****************";
@@ -341,7 +341,7 @@ int main() {
     do {
         if (cont_tela > 1) {
             cabecalho();
-            menu();
+            interfaceMenu();
         }
         switch (opcao) {
             case 0:
