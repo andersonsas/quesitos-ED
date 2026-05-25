@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <windows.h>
 
 /******************** ESTRUTURAS ********************/
 
@@ -13,45 +14,45 @@ typedef struct pilha {
     No *topo;
 } Pilha;
 
+/******************** GLOBAIS ********************/
+COORD CursorPosition;
+Pilha pilhaA = {}, pilhaB = {}, pilhaResultado = {};
+
 /******************** PROTÓTIPO ********************/
 
+void gotoXY(int, int);
 void push(Pilha *s, int i);
 int pop(Pilha *s);
 bool isEmpty(Pilha *s);
 void clear(Pilha *s);
-int ler_topo(Pilha *s);
+int lerTopo(Pilha *s);
 void imprimir(Pilha *s);
-void empilhar_digitos(Pilha *s, int i);
+void empilharDigitos(Pilha *s, int i);
+void interfaceMenu();
+void interfaceSomar();
+void somar();
 
 /******************** PRINCIPAL ********************/
 
 int main() {
-    Pilha pilhaA = {}, pilhaB = {}, pilhaResultado = {};
+    int option;
 
-    int digito1, digito2;
-    puts("Digite dois numeros inteiros.");
-    scanf("%d", &digito1);
-    scanf("%d", &digito2);
+    do {
+        interfaceMenu();
+        scanf("%d", &option);
+        switch (option) {
+            case 1:
+                somar();
+                break;
+            case 0:
+                break;
 
-    empilhar_digitos(&pilhaA, digito1);
-    empilhar_digitos(&pilhaB, digito2);
+            default:
+                break;
+        }
+    } while (option);
 
-    printf("%d", digito1);
-    printf(" + ");
-    printf("%d", digito2);
-    printf(" = ");
 
-    int vai_um = 0;
-    while (pilhaA.topo != NULL || pilhaB.topo != NULL || vai_um > 0) {
-        int digito1 = pop(&pilhaA);
-        int digito2 = pop(&pilhaB);
-        int soma = digito1 + digito2 + vai_um;
-
-        push(&pilhaResultado, soma % 10);
-        vai_um = soma / 10;
-    }
-
-    imprimir(&pilhaResultado);
 
     clear(&pilhaA);
     clear(&pilhaB);
@@ -92,7 +93,7 @@ void clear(Pilha *s) {
     }
 }
 
-int ler_topo(Pilha *s) {
+int lerTopo(Pilha *s) {
     if (isEmpty(s)) return -1;
     return s->topo->value;
 }
@@ -107,7 +108,7 @@ void imprimir(Pilha *s) {
     }
 }
 
-void empilhar_digitos(Pilha *s, int valor) {
+void empilharDigitos(Pilha *s, int valor) {
     if (valor == 0) {
         push(s, 0);
         return;
@@ -118,4 +119,62 @@ void empilhar_digitos(Pilha *s, int valor) {
     for (int i = 0; num_str[i] != '\0'; i++) {
         push(s, num_str[i] - '0');
     }
+}
+
+/******************** INTERFACES ********************/
+
+void somar() {
+    system("cls");
+    interfaceSomar();
+    int num1, num2;
+
+    gotoXY(35, 5); scanf("%d", &num1);
+    gotoXY(35, 6); scanf("%d", &num2);
+
+    empilharDigitos(&pilhaA, num1);
+    empilharDigitos(&pilhaB, num2);
+
+    int vai_um = 0;
+    while (pilhaA.topo != NULL || pilhaB.topo != NULL || vai_um > 0) {
+        int digito1 = pop(&pilhaA);
+        int digito2 = pop(&pilhaB);
+        int soma = digito1 + digito2 + vai_um;
+
+        push(&pilhaResultado, soma % 10);
+        vai_um = soma / 10;
+    }
+
+    gotoXY(35, 7);
+    while (!isEmpty(&pilhaResultado)) {
+        printf("%d", pop(&pilhaResultado));
+    }
+    getchar(); gotoXY(15, 10); system("pause");
+}
+
+/******************** INTERFACES ********************/
+
+void interfaceMenu() {
+    int col = 15; system("cls");
+    gotoXY(col, 4); printf("+ ---------------- MENU -------------- +");
+    gotoXY(col, 5); printf("|      Somar dois numeros....[1]       |");
+    gotoXY(col, 6); printf("|      Sair..................[0]       |");
+    gotoXY(col, 7); printf("|      Digite a opcao:                 |");
+    gotoXY(col, 8); printf("+ ------------------------------------ +");
+    gotoXY(45, 7);
+}
+
+void interfaceSomar() {
+    int col = 15; system("cls");
+    gotoXY(col, 4); printf("+ ----- SOMA DE INTEIRO COM PILHA ----- +");
+    gotoXY(col, 5); printf("|      Numero A  :                      |");
+    gotoXY(col, 6); printf("|      Numero B  :                      |");
+    gotoXY(col, 7); printf("|      Resultado :                      |");
+    gotoXY(col, 8); printf("+ ------------------------------------- +");
+}
+
+void gotoXY(int x, int y) {
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    CursorPosition.X = x;
+    CursorPosition.Y = y;
+    SetConsoleCursorPosition(console, CursorPosition);
 }
