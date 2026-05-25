@@ -20,6 +20,7 @@ Pilha pilhaA = {}, pilhaB = {}, pilhaResultado = {};
 
 /******************** PROTÓTIPO ********************/
 
+void menu();
 void gotoXY(int, int);
 void push(Pilha *s, int i);
 int pop(Pilha *s);
@@ -35,6 +36,12 @@ void somar();
 /******************** PRINCIPAL ********************/
 
 int main() {
+    menu();
+
+    return 0;
+}
+
+void menu() {
     int option;
 
     do {
@@ -45,20 +52,15 @@ int main() {
                 somar();
                 break;
             case 0:
+                clear(&pilhaA);
+                clear(&pilhaB);
+                clear(&pilhaResultado);
                 break;
-
             default:
                 break;
         }
     } while (option);
-
-
-
-    clear(&pilhaA);
-    clear(&pilhaB);
-    clear(&pilhaResultado);
     puts(""); system("pause");
-    return 0;
 }
 
 /******************** FUNÇÕES PILHA ********************/
@@ -126,27 +128,28 @@ void empilharDigitos(Pilha *s, int valor) {
 void somar() {
     system("cls");
     interfaceSomar();
+    Pilha *A = &pilhaA, *B = &pilhaB, *R = &pilhaResultado;
     int num1, num2;
 
     gotoXY(35, 5); scanf("%d", &num1);
     gotoXY(35, 6); scanf("%d", &num2);
 
-    empilharDigitos(&pilhaA, num1);
-    empilharDigitos(&pilhaB, num2);
+    empilharDigitos(A, num1);
+    empilharDigitos(B, num2);
 
     int vai_um = 0;
-    while (pilhaA.topo != NULL || pilhaB.topo != NULL || vai_um > 0) {
-        int digito1 = pop(&pilhaA);
-        int digito2 = pop(&pilhaB);
+    while (A->topo != NULL || B->topo != NULL || vai_um > 0) {
+        int digito1 = pop(A);
+        int digito2 = pop(B);
         int soma = digito1 + digito2 + vai_um;
 
-        push(&pilhaResultado, soma % 10);
+        push(R, soma % 10);
         vai_um = soma / 10;
     }
 
     gotoXY(35, 7);
-    while (!isEmpty(&pilhaResultado)) {
-        printf("%d", pop(&pilhaResultado));
+    while (!isEmpty(R)) {
+        printf("%d", pop(R));
     }
     getchar(); gotoXY(15, 10); system("pause");
 }
