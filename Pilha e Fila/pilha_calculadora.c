@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /******************** ESTRUTURAS ********************/
 
@@ -14,10 +15,13 @@ typedef struct pilha {
 
 /******************** PROTÓTIPO ********************/
 
-void push(Pilha *, int);
-int pop(Pilha *);
-void imprimir(Pilha *);
-void empilhar_digitos(Pilha *, int);
+void push(Pilha *s, int i);
+int pop(Pilha *s);
+bool isEmpty(Pilha *s);
+void clear(Pilha *s);
+int ler_topo(Pilha *s);
+void imprimir(Pilha *s);
+void empilhar_digitos(Pilha *s, int i);
 
 /******************** PRINCIPAL ********************/
 
@@ -48,6 +52,11 @@ int main() {
     }
 
     imprimir(&pilhaResultado);
+
+    clear(&pilhaA);
+    clear(&pilhaB);
+    clear(&pilhaResultado);
+    puts(""); system("pause");
     return 0;
 }
 
@@ -63,7 +72,7 @@ void push(Pilha *s, int value) {
 }
 
 int pop(Pilha *s) {
-    if (!s->topo) { return 0; }
+    if (isEmpty(s))  return 0;
 
     No *aux = s->topo;
     int value = s->topo->value;
@@ -71,6 +80,21 @@ int pop(Pilha *s) {
     free(aux);
 
     return value;
+}
+
+bool isEmpty(Pilha *s) {
+    return s->topo == NULL;
+}
+
+void clear(Pilha *s) {
+    while (!isEmpty(s)) {
+        pop(s);
+    }
+}
+
+int ler_topo(Pilha *s) {
+    if (isEmpty(s)) return -1;
+    return s->topo->value;
 }
 
 void imprimir(Pilha *s) {
