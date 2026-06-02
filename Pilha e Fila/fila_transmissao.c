@@ -4,6 +4,28 @@
 
 #define DELAY(ms) Sleep(ms)
 
+// --- FUNÇÕES DE MANIPULAÇÃO DO CONSOLE ---
+
+COORD CursorPosition;
+
+void gotoXY(int x, int y) {
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    CursorPosition.X = x;
+    CursorPosition.Y = y;
+    SetConsoleCursorPosition(console, CursorPosition);
+}
+
+// Esconde o cursor piscante para a animação ficar limpa
+void esconderCursor() {
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 100;
+    info.bVisible = FALSE;
+    SetConsoleCursorInfo(console, &info);
+}
+
+// --- ESTRUTURAS DE DADOS (FILA) ---
+
 // Estrutura que representa um pacote (Nó da Fila)
 typedef struct Node {
     int id_pacote;
@@ -65,62 +87,111 @@ Node *desenfileirar(Queue *q) {
     return pacoteRemovido;
 }
 
+// --- LÓGICA DE DESENHO VISUAL ---
+
+// Desenha a fila de pacotes graficamente.
+// direction = -1 (cresce para a esquerda, ex: Origem)
+// direction = 1 (cresce para a direita, ex: Destino)
+void desenharFila(Queue *q, int startX, int y, int direction) {
+    Node *atual = q->inicio;
+    int x = startX;
+
+    // Limpa a área antes de redesenhar para evitar "fantasmas"
+    // Limitado a 7 blocos para caber na tela padrão de 80 colunas
+    for (int i = 0; i < 7; i++) {
+        gotoXY(startX + (i * direction * 5), y);
+        printf("    ");
+    }
+
+    int count = 0;
+    while (atual != NULL && count < 7) {
+        gotoXY(x, y);
+        printf("[%02d]", atual->id_pacote);
+        x += direction * 5; // Espaçamento de 5 colunas entre pacotes
+        atual = atual->prox;
+        count++;
+    }
+}
+
+// --- FUNÇÃO PRINCIPAL ---
+
 int main() {
-    Queue filaTransmissao;
-    inicializarFila(&filaTransmissao);
+    Queue filaOrigem, filaDestino;
+    inicializarFila(&filaOrigem);
+    inicializarFila(&filaDestino);
 
-    int tamanho_arquivo, tamanho_max_pacote;
+    int tamanho_arquivo, tamanho_max;
 
-    printf("=== SIMULADOR DE TRANSFERENCIA DE ARQUIVOS ===\n\n");
-    printf("Informe o tamanho total do arquivo (em bytes): ");
+    printf("=== SIMULADOR DE REDE VISUAL ===\n\n");
+    printf("Tamanho do arquivo (bytes): ");
     scanf("%d", &tamanho_arquivo);
-    printf("Informe o tamanho maximo de cada pacote (em bytes): ");
-    scanf("%d", &tamanho_max_pacote);
+    printf("Tamanho max. do pacote (bytes): ");
+    scanf("%d", &tamanho_max);
 
-    if (tamanho_arquivo <= 0 || tamanho_max_pacote <= 0) {
-        printf("Valores invalidos. O tamanho deve ser maior que zero.\n");
-        return 1;
-    }
+    if (tamanho_arquivo <= 0 || tamanho_max <= 0) return 1;
 
-    // 1. Fase de Divisão e Enfileiramento
-    printf("\n--- Dividindo o arquivo em pacotes ---\n");
+    // Enfileira todos os pacotes na Origem
     int bytes_restantes = tamanho_arquivo;
-    int id_atual = 1;
-
+    int id = 1;
     while (bytes_restantes > 0) {
-        int tamanho_atual = (bytes_restantes > tamanho_max_pacote) ? tamanho_max_pacote : bytes_restantes;
-        enfileirar(&filaTransmissao, id_atual, tamanho_atual);
-        bytes_restantes -= tamanho_atual;
-        id_atual++;
+        int tam_atual = (bytes_restantes > tamanho_max) ? tamanho_max : bytes_restantes;
+        enfileirar(&filaOrigem, id, tam_atual);
+        bytes_restantes -= tam_atual;
+        id++;
     }
 
-    int total_pacotes = filaTransmissao.total_pacotes;
-    printf("O arquivo de %d bytes foi dividido em %d pacote(s).\n", tamanho_arquivo, total_pacotes);
-    printf("Iniciando a transmissao pelo canal de comunicacao...\n\n");
-    DELAY(1500); // Pausa de 1.5 segundos antes de começar
+    system("cls"); // Limpa a tela para começar a animação
 
-    // 2. Fase de Transmissão (Desenfileiramento)
-    int pacotes_enviados = 0;
-    while (!filaVazia(&filaTransmissao)) {
-        Node *pacote = desenfileirar(&filaTransmissao);
+    // Coordenadas base do layout
+    int y_animacao = 10;
+    int startX_origem = 30; // Frente da fila de origem
+    int startX_canal = 35;  // Início do movimento no canal
+    int endX_canal = 60;    // Fim do movimento no canal
+    int startX_destino = 65;// Frente da fila de destino
 
-        // Simulação visual da transferência
-        printf("[Origem] Preparando Pacote %d (%d bytes)...\n", pacote->id_pacote, pacote->tamanho_bytes);
-        DELAY(800);
+    //esconderCursor();
+    // Desenha o cabeçalho fixo
+    gotoXY(15, 6); printf("=== TRANSMISSAO EM ANDAMENTO ===");
+    gotoXY(18, 8); printf("ORIGEM");
+    gotoXY(45, 8); printf("CANAL");
+    gotoXY(70, 8); printf("DESTINO");
 
-        printf("   ---> [Canal] Transportando Pacote %d...\n", pacote->id_pacote);
-        DELAY(1200); // Simula o tempo de rede
+    // Desenha o estado inicial
+    desenharFila(&filaOrigem, startX_origem, y_animacao, -1);
+    desenharFila(&filaDestino, startX_destino, y_animacao, 1);
+    Sleep(1500); // Pausa dramática antes de começar
 
-        printf("      ---> [Destino] Pacote %d recebido com sucesso!\n\n", pacote->id_pacote);
-        DELAY(500);
+    // Fase de Transporte Visuais
+    while (!filaVazia(&filaOrigem)) {
+        // 1. Remove da Origem e atualiza a tela
+        Node *pacote = desenfileirar(&filaOrigem);
+        desenharFila(&filaOrigem, startX_origem, y_animacao, -1);
 
-        pacotes_enviados++;
-        free(pacote); // Libera a memória do pacote que já chegou
+        // 2. Animação de deslocamento do pacote
+        for (int cx = startX_canal; cx <= endX_canal; cx++) {
+            if (cx > startX_canal) {
+                gotoXY(cx - 1, y_animacao);
+                printf(" "); // Apaga o rastro anterior do pacote
+            }
+            gotoXY(cx, y_animacao);
+            printf("[%02d]", pacote->id_pacote); // Desenha nova posição
+            Sleep(40); // Velocidade do pacote
+        }
+
+        // Apaga o pacote do final do canal
+        gotoXY(endX_canal, y_animacao);
+        printf("    ");
+
+        // 3. Adiciona no Destino e atualiza a tela
+        enfileirar(&filaDestino, pacote->id_pacote, pacote->tamanho_bytes);
+        desenharFila(&filaDestino, startX_destino, y_animacao, 1);
+
+        free(pacote); // Libera o nó temporário usado no transporte
     }
 
-    // 3. Conclusão
-    printf("=== TRANSMISSAO CONCLUIDA ===\n");
-    printf("Todos os %d pacotes foram transferidos com sucesso do ponto de origem ao destino.\n", pacotes_enviados);
+    // Fim
+    gotoXY(15, 14);
+    printf("=== TRANSFERENCIA CONCLUIDA! TODOS OS PACOTES ENTREGUES. ===\n\n");
 
     return 0;
 }
