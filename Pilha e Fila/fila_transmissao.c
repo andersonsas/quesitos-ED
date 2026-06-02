@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-
-#define DELAY(ms) Sleep(ms)
+#include <locale.h>
 
 // --- FUNÇÕES DE MANIPULAÇÃO DO CONSOLE ---
 
@@ -13,15 +12,6 @@ void gotoXY(int x, int y) {
     CursorPosition.X = x;
     CursorPosition.Y = y;
     SetConsoleCursorPosition(console, CursorPosition);
-}
-
-// Esconde o cursor piscante para a animação ficar limpa
-void esconderCursor() {
-    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO info;
-    info.dwSize = 100;
-    info.bVisible = FALSE;
-    SetConsoleCursorInfo(console, &info);
 }
 
 // --- ESTRUTURAS DE DADOS (FILA) ---
@@ -98,16 +88,22 @@ void desenharFila(Queue *q, int startX, int y, int direction) {
 
     // Limpa a área antes de redesenhar para evitar "fantasmas"
     // Limitado a 7 blocos para caber na tela padrão de 80 colunas
-    for (int i = 0; i < 7; i++) {
-        gotoXY(startX + (i * direction * 5), y);
-        printf("    ");
+    for (int i = 0; i <= 7; i++) {
+        gotoXY(startX - 5 * direction, y + i);
+        (direction == 1) ? printf("\033[0K") : printf("\033[1K");
     }
 
     int count = 0;
-    while (atual != NULL && count < 7) {
+    while (atual != NULL && count < 7 * 7) {
+        if ((count % 7) == 0) {
+            x = startX;
+            y = y + 1;
+        }
+
         gotoXY(x, y);
         printf("[%02d]", atual->id_pacote);
         x += direction * 5; // Espaçamento de 5 colunas entre pacotes
+
         atual = atual->prox;
         count++;
     }
@@ -116,6 +112,7 @@ void desenharFila(Queue *q, int startX, int y, int direction) {
 // --- FUNÇÃO PRINCIPAL ---
 
 int main() {
+    setlocale(LC_ALL, ".65001");
     Queue filaOrigem, filaDestino;
     inicializarFila(&filaOrigem);
     inicializarFila(&filaDestino);
@@ -190,8 +187,12 @@ int main() {
     }
 
     // Fim
-    gotoXY(15, 14);
-    printf("=== TRANSFERENCIA CONCLUIDA! TODOS OS PACOTES ENTREGUES. ===\n\n");
+    gotoXY(15, 20);
+    printf("=== TRANSFERÊNCIA CONCLUÍDA! TODOS OS PACOTES ENTREGUES. ===\n\n");
+
+    printf("\nTamanho do arquivo (bytes) : %d  ", tamanho_arquivo);
+    printf("\nTamanho máximo do pacote (bytes) : %d  ", tamanho_max);
+    printf("\nTamanho do último pacote (bytes) : %d\n", filaDestino.fim->tamanho_bytes);
 
     return 0;
 }
